@@ -2,6 +2,8 @@ const express = require('express');
 const router = express('Router');
 const nodemailer = require('nodemailer');
 
+const notFountError = "Page Not Found";
+
 router.use(express.json());
 
 router.post('/', function (req, res) {
@@ -33,5 +35,13 @@ router.post('/', function (req, res) {
         res.send('mail has been sent successfully');
     });
 });
+
+// not found case
+router.all('*',(req,res,next)=>
+{
+    res.statusCode = 404;
+    const error = new Error(notFountError);
+    next(error);
+})
 
 module.exports = router;
