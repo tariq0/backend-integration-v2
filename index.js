@@ -39,7 +39,6 @@ app.use(authMiddleware);
 app.use(express.json());
 // json error handling middleware;
 
-app.use('/', homeRouter);
 app.use('/departments', departmentRrouter);
 app.use('/subdepartments', subdepartmentRrouter);
 app.use('/photoalbum', photoalbumRouter);
@@ -47,6 +46,7 @@ app.use('/news', newsRouter);
 app.use('/publication', publicationRouter);
 app.use('/auth', authRouter);
 app.use('/ContactUS', ContactUSRouter)
+app.use('/', homeRouter);
 
 app.use(express.static('public')); // static files middleware
 

@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 
 
+const notFountError = "Page Not Found";
+
 class ResponseObject {
     constructor(cur_user_, data_){
         this.current_user = cur_user_;
@@ -23,6 +25,14 @@ router.get('',(req, res, next)=>{
         res.json(resObj);
     }
 );
+
+// not found case
+router.all('*',(req,res,next)=>
+{
+    res.statusCode = 404;
+    const error = new Error(notFountError);
+    next(error);
+})
 
 
 
