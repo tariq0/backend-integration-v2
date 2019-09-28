@@ -1,0 +1,20 @@
+{
+  "name": "unesco-be",
+  "version": "1.0.0",
+  "description": "backend for unesco web app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tariq",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^3.0.6",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-session": "^1.16.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.7.1",
+    "serve-static": "^1.14.1"
+  }
+}
