@@ -14,6 +14,8 @@ const subdepartmentRrouter = require('./routes/subdepartment-routes');
 const photoalbumRouter = require('./routes/photoalbum-routes');
 const newsRouter = require('./routes/news-routes');
 const publicationRouter = require('./routes/publication-routes');
+const ContactUSRouter = require('./routes/ContactUsRouter')
+
 
 const authRouter = require('./routes/auth-routes');
 // intialize a database connection when imported
@@ -44,6 +46,7 @@ app.use('/photoalbum', photoalbumRouter);
 app.use('/news', newsRouter);
 app.use('/publication', publicationRouter);
 app.use('/auth', authRouter);
+app.use('/ContactUS', ContactUSRouter)
 
 app.use(express.static('public')); // static files middleware
 
