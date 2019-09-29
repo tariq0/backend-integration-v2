@@ -5,7 +5,7 @@
 
 const Model = require('../models/news');
 const ResponseObject = require('../models/response_object');
-
+const Errors = require('../Globals/Error-Messages');
 // constants used to customize error messages
 // but not used here
 //const connectionError = 'connection failed';
@@ -24,8 +24,18 @@ function getAll(req, res, next) {
             )
             res.json(resObj);
         }).
-        catch(err => {
+        catch(err =>{
+            // only connection errors
+            if (err.name == 'CastError'){
+                res.statusCode = 404;
+                err.message = Errors.pageNotFoundError;
+                next(err);
+            }
+            else{
+            res.statusCode = 500;
+            err.message = Errors.connectionError;
             next(err);
+            }
         })
 }
 
@@ -40,7 +50,8 @@ function getById(req, res, next) {
         }).
         catch(err => {
             if (err.name == 'CastError') {
-                res.statusCode = 400;
+                err.message = Errors.castError;
+                res.statusCode = 404;
                 next(err);
             } else
                 next(err);
@@ -65,13 +76,22 @@ function create(req, res, next) {
         catch(err => {
             // validation 
             if (err.name == 'MongoError'
-                && err.code
-                || err.name == 'validationError'
-                || err.name == 'CastError'
-            ) {
-                res.statusCode = 400;
+                && err.code) {
+                    res.statusCode=500;
+                err.message = Errors.mongoUniqueError;
                 next(err);
-            } else {
+            }
+            else if (err.name == 'ValidationError') {
+                res.statusCode= 400;
+                err.message = Errors.ValidationError;
+                next(err);
+            }
+            else if (err.name == 'CastError') {
+                res.statusCode=404;
+                err.message = Errors.castError;
+                next(err);
+            } 
+             else {
                 console.log(err)
                 next(err);
             }
@@ -85,13 +105,18 @@ function update(req, res, next) {
         req.params.id,
         update, (err, data) => {
             if (err) {
-                if (err.name == 'CastError'
-                    || err.name == 'MongoError' // unique field error
-                    && err.code
-                    ) {
-                    res.statusCode = 400;
+                if (err.name == 'MongoError'
+                && err.code) {
+                    res.statusCode=500;
+                err.message = Errors.mongoUniqueError;
+                next(err);            
+                }
+                else if (err.name == 'CastError') {
+                    res.statusCode=404;
+                    err.message = Errors.castError;
                     next(err);
-                } else {
+                } 
+                 else {
                     next(err);
                 }
             } else {
@@ -112,7 +137,8 @@ function delete_(req, res, next) {
         (err, data) => {
             if (err) {
                 if (err.name == 'CastError') {
-                    res.statusCode = 400;
+                    err.message = Errors.castError;
+                    res.statusCode = 404;
                     next(err);
                 } else {
                     next(err);

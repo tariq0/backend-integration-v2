@@ -9,11 +9,9 @@
 const jwt = require('jsonwebtoken');
 const authConfig = require('../configuration/auth-config');
 //
-const unAuthorizedError = 'you must login';
-const noPermissionError = 'you have no permissions';
 //
 const secret = authConfig.secret;
-
+const Errors = require('../Globals/Error-Messages');
 
 
 
@@ -62,7 +60,7 @@ function isAuthorized(req, res, next) {
     if(req.user.role){
          next();
     }else {
-        const error = new Error(unAuthorizedError);
+        const error = new Error(Errors.unAuthorizedError);
         res.statusCode = 400;
         next(error);
     }
@@ -80,7 +78,7 @@ function hasPermission(perm) {
             return next();
         }else{
             res.statusCode = 400;
-            const error = new Error(noPermissionError);
+            const error = new Error(Errors.noPermissionError);
             next(error);
         }
     }

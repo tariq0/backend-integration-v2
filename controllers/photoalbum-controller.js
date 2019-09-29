@@ -5,6 +5,7 @@
 
 const Model = require('../models/photoalbum');
 const ResponseObject = require('../models/response_object');
+const Errors = require('../Globals/Error-Messages');
 
 //const connectionError = 'connection failed';
 const successMessage = 'success';
@@ -22,6 +23,10 @@ function getAll(req, res, next) {
             res.json(resObj);
         }).
         catch(err => {
+             if (err.name == 'CastError') {
+                res.statusCode = 404;
+                err.message = Errors.castError;
+            } 
             next(err);
         })
 }
@@ -38,7 +43,8 @@ function getById(req, res, next) {
         }).
         catch(err => {
             if (err.name == 'CastError') {
-                res.statusCode = 400;
+                err.message = Errors.castError;
+                res.statusCode = 404;
                 next(err);
             } else
                 next(err);
@@ -61,11 +67,19 @@ function create(req, res, next) {
             // unique fields errors
             console.log(err);
             if (err.name == 'MongoError'
-                && err.code
-                || err.name == 'ValidationError'
-                || err.name == 'CastError'
-            ) {
-                res.statusCode = 400;
+                && err.code) {
+                    res.statusCode=500;
+                err.message = Errors.mongoUniqueError;
+                next(err);
+            }
+            else if (err.name == 'ValidationError') {
+                res.statusCode= 400;
+                err.message = Errors.ValidationError;
+                next(err);
+            }
+            else if (err.name == 'CastError') {
+                res.statusCode=404;
+                err.message = Errors.castError;
                 next(err);
             } else {
                 next(err);
@@ -79,11 +93,15 @@ function update(req, res, next) {
         req.params.id,
         update, (err, data) => {
             if (err) {
-                if (err.name == 'CastError'
-                    || err.name == 'MongoError'
-                    && err.code
-                ) {
-                    res.statusCode = 400;
+                if (err.name == 'MongoError'
+                && err.code) {
+                    res.statusCode=500;
+                err.message = Errors.mongoUniqueError;
+                next(err);            
+                }
+                else if (err.name == 'CastError') {
+                    res.statusCode=404;
+                    err.message = Errors.castError;
                     next(err);
                 } else {
                     next(err);
@@ -107,7 +125,8 @@ function delete_(req, res, next) {
         (err, data) => {
             if (err) {
                 if (err.name == 'CastError') {
-                    res.statusCode = 400;
+                    err.message = Errors.castError;
+                    res.statusCode = 404;
                     next(err);
                 } else {
                     next(err);

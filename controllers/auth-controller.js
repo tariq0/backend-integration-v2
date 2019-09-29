@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const UserModel = require('../models/user');
 const authConfig = require('../configuration/auth-config');
 const auth = require('../middlewares/auth-middleware');
+const Errors = require('../Globals/Error-Messages')
 //const hasPermission = auth.hasPermission;
 const secret =  authConfig.secret;// used to create tokens
 const salt = authConfig.salt; 
@@ -20,17 +21,6 @@ const ResponseObject = require('../models/response_object');
 // to 'user not found' but at deplyment
 // you should replace it by "email or password is incorrect".
 // the same for "passwordWrongError".
-const emailError = 'email already exists';
-const emailNotError = 'user not found ';
-
-const passwordError = 'please enter password';
-const passwordWrongError = 'wrong password'; 
-
-const requiredError = 'please check required fields';
-const connectionError = 'connection error';
-
-const successMessage = ' success';
-const pageNotFoundError = 'page not found';
 
 //
 function getAll(req, res, next) {
@@ -43,9 +33,16 @@ function getAll(req, res, next) {
     }).
     catch(err =>{
         // only connection errors
+        if (err.name == 'CastError'){
+            res.statusCode = 404;
+            err.message = Errors.pageNotFoundError;
+            next(err);
+        }
+        else{
         res.statusCode = 500;
-        err.message = connectionError;
+        err.message = Errors.connectionError;
         next(err);
+        }
     })
 }
 
@@ -63,11 +60,11 @@ function getById(req, res, next) {
         // cast error
         if (err.name == 'CastError'){
             res.statusCode = 404;
-            err.message = pageNotFoundError;
+            err.message = Errors.pageNotFoundError;
             next(err);
         }else{
             res.statusCode = 500;
-            err.message = connectionError;
+            err.message = Errors.connectionError;
             next(err);
         }
     })
@@ -111,12 +108,12 @@ function create(req, res, next) {
                     // if errors occured at save phase
                     if(err.name == 'MongoError'){
                         res.statusCode =500;
-                        const error = new Error(connectionError);
+                        const error = new Error(Errors.connectionError);
                         next (error);
                     }else{
                         // errors due to validation
                         res.satusCode = 400;
-                        const error = new Error(requiredError);
+                        const error = new Error(Errors.requiredError);
                         next(error);
                     }
                 })
@@ -124,14 +121,14 @@ function create(req, res, next) {
             catch(err =>{
                 // if no password is passed ecryption will throw error
                 res.satusCode = 400;
-                const error = new Error(passwordError);
+                const error = new Error(Errors.passwordError);
                 next(error); 
             }) 
         }
     }).
     catch(err =>{
         err.statusCode = 500;
-        err.message = connectionError;
+        err.message = Errors.connectionError;
         next(err);
     })
 
@@ -146,8 +143,8 @@ function update(req, res, next){
     UserModel.findByIdAndUpdate(req.params.id, update,(err, data)=>{
         if (err){
             if(err.name =='CastError'){
-                res.ststusCode = 400;
-                err.message =pageNotFoundError;
+                res.ststusCode = 404;
+                err.message =Errors.pageNotFoundError;
             }
             next(err);
         }else{
@@ -166,8 +163,8 @@ function delete_(req, res, next){
     UserModel.findByIdAndDelete(req.params.id,(err, data)=>{
         if (err){
             if(err.name =='CastError'){
-                res.ststusCode = 400;
-                err.message =pageNotFoundError;
+                res.ststusCode = 404;
+                err.message = Errors.pageNotFoundError;
             }
             next(err);
         }else{
@@ -193,7 +190,7 @@ function signUp(req, res, next){
         if(doc){
             
             res.statusCode = 400;
-            const error = new Error(emailError);
+            const error = new Error(Errors.emailError);
             next(error);
         }else{
             // encrypt password to save
@@ -222,25 +219,25 @@ function signUp(req, res, next){
                     // if errors occured at save phase
                     if(err.name == 'MongoError'){
                         res.statuscode = 500;
-                        err.message = connectionError;
+                        err.message = Errors.connectionError;
                         next(err);
                     }else{
                         res.statuscode = 400;
-                        err.message = requiredError;
+                        err.message = Errors.requiredError;
                         next(err);
                     }
                 })
             }).
             catch(err=>{
                 res.statusCode = 400;
-                err.message = passwordError;
+                err.message = Errors.passwordError;
                 next(err);
             }) // if no password is passed ecryption will throw error
         }
     }).
     catch(err =>{ 
         res.statusCode = 500;
-        err.message = connectionError;
+        err.message = Errors.connectionError;
         next(err);
     })
 }
@@ -253,7 +250,7 @@ function logIn(req, res, next){
     then(doc =>{
         if(!doc){ // email existence check
             res.status(400);
-            const error = new Error(emailNotError);
+            const error = new Error(Errors.emailNotError);
             return next(error);
             // use return else the program will flow after if.
         }
@@ -296,19 +293,19 @@ function logIn(req, res, next){
                 res.json(resObj);
             }else{
                 res.statusCode = 400;
-                const error = new Error(passwordWrongError);
+                const error = new Error(Errors.passwordWrongError);
                 next(error);
             }
         }).
         catch(err=>{
             res.statusCode = 400;
-            const error = new Error(passwordError);
+            const error = new Error(Errors.passwordError);
             next(error);
         })
     }).
     catch(err=>{
         res.statusCode = 500;
-        const error = new Error(connectionError);
+        const error = new Error(Errors.connectionError);
         next(error);
     })
 };
