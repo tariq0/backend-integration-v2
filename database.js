@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 // db config
 const server = '127.0.0.1:27017'; 
 const database = 'backend-demo';
-const connectionSuc = `database connected @ ${server} ${database}`;
+const connectionSuc = `database connected @ ${server} db:${database}`;
 const connectionFail = `database faild to connect ${server}`;
 
 // db connection

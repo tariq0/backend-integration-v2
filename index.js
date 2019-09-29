@@ -9,13 +9,12 @@ const errorHandler = require('./middlewares/error-handling-middleware');
 
 // routes imports
 const homeRouter = require('./routes/home-routes');
+const uploadRouter = require('./routes/upload-routes');
 const departmentRrouter = require('./routes/department-routes');
 const subdepartmentRrouter = require('./routes/subdepartment-routes');
 const photoalbumRouter = require('./routes/photoalbum-routes');
 const newsRouter = require('./routes/news-routes');
 const publicationRouter = require('./routes/publication-routes');
-const ContactUSRouter = require('./routes/ContactUsRouter')
-
 
 const authRouter = require('./routes/auth-routes');
 // intialize a database connection when imported
@@ -35,18 +34,19 @@ app.options('*',(req, res, next)=>{
 });
 
 app.use(authMiddleware);
-// content type middleware if needed
+
 app.use(express.json());
 // json error handling middleware;
 
+app.use('/', homeRouter);
+app.use('/upload',uploadRouter);
 app.use('/departments', departmentRrouter);
 app.use('/subdepartments', subdepartmentRrouter);
 app.use('/photoalbum', photoalbumRouter);
 app.use('/news', newsRouter);
 app.use('/publication', publicationRouter);
+
 app.use('/auth', authRouter);
-app.use('/ContactUS', ContactUSRouter)
-app.use('/', homeRouter);
 
 app.use(express.static('public')); // static files middleware
 

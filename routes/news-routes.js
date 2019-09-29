@@ -11,7 +11,6 @@ const create = news.create;
 const update = news.update;
 const delete_ = news.delete_;
 
-const notFountError = "Page Not Found";
 // all
 router.get('', getAll);
 
@@ -28,11 +27,6 @@ router.put('/:id', hasPermission('modify'),update);
 router.delete('/:id', hasPermission('delete'),delete_);
 
 // not found case
-router.all('*',(req,res,next)=>
-{
-    res.statusCode=404;
-    const error = new Error(notFountError);
-    next(error);
-})
+
 
 module.exports = router;

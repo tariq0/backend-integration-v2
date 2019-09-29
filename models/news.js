@@ -10,7 +10,10 @@ const NewsSchema = new db.Schema({
 
     description_long_ar:{type:String, required: true}, // required
     description_long_en:{type:String, required: true}, // required
-    date: Date,
+    date: {
+        type: Date,
+        default: Date.now
+    },
     images : [
         {
             type:String

@@ -8,13 +8,21 @@ const PhotoalbumSchema = new db.Schema({
     title_en: String, 
     description_ar: String, 
     description_en: String,
-    department_id : 
+    department_id : // it must be required to make relations.
         {
             type:db.Schema.Types.ObjectId, 
             ref:'Department'
         }        
     ,
-    img:{type:String, required: true, unique: true}
+    images:[
+        {
+            type:String, required: true
+        }
+    ],
+    date: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 const PhotoalbumModel = db.model(

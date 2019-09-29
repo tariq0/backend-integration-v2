@@ -21,12 +21,8 @@ function getAll(req, res, next) {
             res.json(resObj);
         }).
         catch(err => {
-            if (err.name == 'CastError') {
-                res.statusCode=404;
-               err.message = Errors.castError;
-           } 
-           next(err);
-       })
+            next(err);
+        })
 }
 
 
@@ -41,8 +37,7 @@ function getById(req, res, next) {
         }).
         catch(err => {
             if (err.name == 'CastError') {
-                res.message = Errors.castError;
-                res.statusCode = 404;
+                res.statusCode = 400;
                 next(err);
             } else
                 next(err);
@@ -61,28 +56,20 @@ function create(req, res, next) {
         )
         res.json(resObj);
     }).
-    catch(err => {
-        // unique fields errors
-        console.log(err);
-        if (err.name == 'MongoError'
-            && err.code) {
-                res.statusCode=500;
-            err.message = Errors.mongoUniqueError;
-            next(err);
-        }
-        else if (err.name == 'ValidationError') {
-            res.statusCode= 400;
-            err.message = Errors.ValidationError;
-            next(err);
-        }
-        else if (err.name == 'CastError') {
-            res.statusCode= 404;
-            err.message = Errors.castError;
-            next(err);
-        } else {
-            next(err);
-        }
-    })
+        catch(err => {
+            // unique fields errors
+            console.log(err);
+            if (err.name == 'MongoError'
+                && err.code
+                || err.name == 'ValidationError'
+                || err.name == 'CastError'
+            ) {
+                res.statusCode = 400;
+                next(err);
+            } else {
+                next(err);
+            }
+        })
 }
 
 function update(req, res, next) {
@@ -91,15 +78,11 @@ function update(req, res, next) {
         req.params.id,
         update, (err, data) => {
             if (err) {
-                if (err.name == 'MongoError'
-                && err.code) {
-                    res.statusCode=500;
-                err.message = Errors.mongoUniqueError;
-                next(err);            
-                }
-                else if (err.name == 'CastError') {
-                    res.statusCode=404;
-                    err.message = Errors.castError;
+                if (err.name == 'CastError'
+                    || err.name == 'MongoError'
+                    && err.code
+                ) {
+                    res.statusCode = 400;
                     next(err);
                 } else {
                     next(err);
@@ -123,8 +106,7 @@ function delete_(req, res, next) {
         (err, data) => {
             if (err) {
                 if (err.name == 'CastError') {
-                    err.message = Errors.castError;
-                    res.statusCode = 404;
+                    res.statusCode = 400;
                     next(err);
                 } else {
                     next(err);
@@ -136,6 +118,7 @@ function delete_(req, res, next) {
                 )
                 res.json(resObj);
             }
+        
         });
 }
 

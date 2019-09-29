@@ -25,7 +25,8 @@ router.post('/login', logIn);
 router.post('/logout', logOut);
 
 // requires read permission
-router.get('/', hasPermisiion('read'), getAll);
+router.get('/', getAll);
+//router.get('/', hasPermisiion('read'), getAll);
 
 router.get('/:id',hasPermisiion('read'), getById);
 

@@ -5,7 +5,6 @@
 
 const Model = require('../models/publication');
 const ResponseObject = require('../models/response_object');
-const Errors = require('../Globals/Error-Messages');
 
 // constants used to customize error messages
 // but not used here
@@ -26,12 +25,8 @@ function getAll(req, res, next) {
             res.json(resObj);
         }).
         catch(err => {
-            if (err.name == 'CastError') {
-               err.message = Errors.castError;
-               res.statusCode = 404;
-           } 
-           next(err);
-       })
+            next(err);
+        })
 }
 
 function getById(req, res, next) {
@@ -45,8 +40,7 @@ function getById(req, res, next) {
         }).
         catch(err => {
             if (err.name == 'CastError') {
-                res.message = Errors.castError;
-                res.statusCode = 404;
+                res.statusCode = 400;
                 next(err);
             } else
                 next(err);
@@ -69,29 +63,60 @@ function create(req, res, next) {
             res.json(resObj);
         }).
         catch(err => {
+            // validation 
+            if (err.name == 'MongoError'
+                && err.code
+                || err.name == 'ValidationError'
+                || err.name == 'CastError'
+            ) {
+                res.statusCode = 400;
+                next(err);
+            } else {
+                console.log(err)
+                next(err);
+            }
+        })
+}
+//
+function saver(req, res, next) {
+    let instance = new Model(req.body);
+    let images = [];
+    let files = [];
+    //console.log(req.files)
+    req.files.images.forEach((file)=>{
+        //mages.push(file.filename)
+            images.push(file.filename);
+    });
+    req.files.files.forEach((file)=>{
+        //mages.push(file.filename)
+            files.push(file.filename);
+    });
+    instance.images = images;
+    instance.files = files;
+    instance.save().
+    then(v => {
+        const resObj = new ResponseObject(
+            req.user,
+            successMessage
+        )
+        res.json(resObj);
+    }).
+        catch(err => {
             // unique fields errors
             console.log(err);
             if (err.name == 'MongoError'
-                && err.code) {
-                    res.statusCode=500;
-                err.message = Errors.mongoUniqueError;
-                next(err);
-            }
-            else if (err.name == 'ValidationError') {
-                res.statusCode= 400;
-                err.message = Errors.ValidationError;
-                next(err);
-            }
-            else if (err.name == 'CastError') {
-                res.statusCode=404;
-                err.message = Errors.castError;
+                && err.code
+                || err.name == 'ValidationError'
+                || err.name == 'CastError'
+            ) {
+                res.statusCode = 400;
                 next(err);
             } else {
                 next(err);
             }
         })
 }
-
+//
 // update
 function update(req, res, next) {
     let update = req.body;
@@ -99,15 +124,11 @@ function update(req, res, next) {
         req.params.id,
         update, (err, data) => {
             if (err) {
-                if (err.name == 'MongoError'
-                && err.code) {
-                    res.statusCode=500;
-                err.message = Errors.mongoUniqueError;
-                next(err);            
-                }
-                else if (err.name == 'CastError') {
-                    res.statusCode=404;
-                    err.message = Errors.castError;
+                if (err.name == 'CastError'
+                    || err.name == 'MongoError' // unique field error
+                    && err.code
+                    ) {
+                    res.statusCode = 400;
                     next(err);
                 } else {
                     next(err);
@@ -130,8 +151,7 @@ function delete_(req, res, next) {
         (err, data) => {
             if (err) {
                 if (err.name == 'CastError') {
-                    err.message = Errors.castError;
-                    res.statusCode = 404;
+                    res.statusCode = 400;
                     next(err);
                 } else {
                     next(err);
@@ -152,5 +172,6 @@ module.exports = {
     getById: getById,
     update: update,
     delete_: delete_,
-    create: create
+    create: create,
+    saver: saver
 }
