@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
+const Model = require('../models/publication');
+const paginate = require('../controllers/pagination-controller');
+
 const pub = require('../controllers/publication-controller');
 const auth = require('../middlewares/auth-middleware');
 const hasPermission = auth.hasPermission;
@@ -16,6 +19,9 @@ router.get('', getAll);
 
 // specific
 router.get('/:id',getById);
+
+// pagination
+router.get('/:perPage/:page',paginate(Model));
 
 // create
 router.post('', hasPermission('create'), create);

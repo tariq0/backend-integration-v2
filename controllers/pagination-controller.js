@@ -1,38 +1,41 @@
 // Generic pagination middleware to be used
 // in any app that uses monggose
 
-function paginate(Model_, perPage_, page_){
-    return (req, res, next) =>{
-        // middleware logic
+// imports
 
-        // find logic
+const ResponseObject = require('../models/response_object');
 
-        // data sent logic
-        // Document found, nextPageState [ok, last],
-        // previousPageState [ok, first],
+function paginate(Model_) {
+    return async (req, res, next) => {
+        console.log(req.params.page, req.params.perPage)
+        let skip = parseInt(req.params.page) - 1;
+        let limit = parseInt(req.params.perPage);
+        let docCount;
+        let nextState = false;
+        let previousState = true;
+        let numberOfPages;
+
+        docCount = await Model_.estimatedDocumentCount();
+        console.log(docCount);
+        let doc = await Model_.find().skip(skip).limit(limit);
+        if (skip == 0)
+            previousState = false;
+        if (docCount > parseInt(req.params.page) * limit)
+            nextState = true;
+        numberOfPages = Math.ceil(docCount / limit);
+        const resObj = new ResponseObject(
+            req.user,
+            {
+                docCount: docCount,
+                numberOfPages: numberOfPages,
+                nextState: nextState,
+                previousState: previousState,
+                doc: doc
+            }
+        )
+        res.send(resObj);
+
     }
+
 }
-
-function paginateById(Model_, perPage_, page_,){
-    return (req, res, next) =>{
-        // middleware logic
-        
-        // find by id logic
-
-        // data sent logic
-        // Document found, nextPageState [ok, last],
-        // previousPageState [ok, first],
-    }
-}
-
-function paginateByCase(Model_, perPage_, page_,){
-    return (req, res, next) =>{
-        // middleware logic
-        
-        // find by case
-
-        // data sent logic
-        // Document found, nextPageState [ok, last],
-        // previousPageState [ok, first],
-    }
-}
+module.exports = paginate;
