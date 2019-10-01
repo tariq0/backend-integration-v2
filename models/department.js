@@ -16,9 +16,15 @@ const DepartmentSchema = new db.Schema({
     subdepartments_ids:[
         {
             type:db.Schema.Types.ObjectId, 
-            ref:'Subdepartment'
+            ref:'SubDepartment' // model ref
         }
     ]
+});
+
+//Cascading delete (delete sub debartments(childs)related to a certain department(parent))
+DepartmentSchema.post('remove', function(next) {
+    SubDepartment.remove({ department_id: this._id }).exec();
+    next();
 });
 
 const DepartmentModel = db.model('Department', DepartmentSchema);

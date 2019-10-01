@@ -14,9 +14,9 @@ const successMessage = 'success';
 //const validationError = 'please check required fields';
 
 
-//
+//Get all departments and it's subdepartments
 function getAll(req, res, next) {
-    DepModel.find().
+    DepModel.find().populate('subdepartments_ids').
         then(doc => {
             const resObj = new ResponseObject(
                 req.user,
@@ -29,8 +29,9 @@ function getAll(req, res, next) {
         })
 }
 
+//get a certain department and it's sub departments
 function getById(req, res, next) {
-    DepModel.findById(req.params.id).
+    DepModel.findById(req.params.id).populate('subdepartments_ids').
         then(doc => {
             const resObj = new ResponseObject(
                 req.user,
