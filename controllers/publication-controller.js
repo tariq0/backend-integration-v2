@@ -54,6 +54,16 @@ function create(req, res, next) {
     // connection
     // unique fields
     const instance = new Model(req.body);
+    // becareful when dealing with dates
+    // it must be saved as dates.
+    if (req.body.date) {
+        instance.date = new Date(req.body.date);
+        //console.log(instance.date);
+    } else {
+        instance.date = new Date();
+        //console.log(instance.date);
+    }
+
     instance.save().
         then(v => {
             const resObj = new ResponseObject(
@@ -91,6 +101,17 @@ function saver(req, res, next) {
         //mages.push(file.filename)
             files.push(file.filename);
     });
+
+    // becareful when dealing with dates
+    // it must be saved as dates.
+    if (req.body.date) {
+        instance.date = new Date(req.body.date);
+        //console.log(instance.date);
+    } else {
+        instance.date = new Date();
+        //console.log(instance.date);
+    }
+
     instance.images = images;
     instance.files = files;
     instance.save().

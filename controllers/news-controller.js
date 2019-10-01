@@ -5,6 +5,7 @@
 
 const Model = require('../models/news');
 const ResponseObject = require('../models/response_object');
+const PaginationObject = require('../models/pagination-object');
 
 // constants used to customize error messages
 // but not used here
@@ -14,10 +15,11 @@ const successMessage = 'success';
 //const validationError = 'please check required fields';
 
 
-//
+// gets latest news
+// this is the archive.
 function getAll(req, res, next) {
-    Model.find().
-        then(doc => {
+    Model.find().select({ date: 1, title_en: 1 }).sort({ date: -1 }).
+        /*then(doc => {
             const resObj = new ResponseObject(
                 req.user,
                 doc
@@ -26,7 +28,18 @@ function getAll(req, res, next) {
         }).
         catch(err => {
             next(err);
-        })
+        })*/
+        exec((err, doc) => {
+            if (!err) {
+                const resObj = new ResponseObject(
+                    req.user,
+                    doc
+                )
+                res.json(resObj);
+            } else {
+                next(err);
+            }
+        });
 }
 
 function getById(req, res, next) {
@@ -40,20 +53,96 @@ function getById(req, res, next) {
         }).
         catch(err => {
             if (err.name == 'CastError') {
-                res.statusCode = 400;
-                next(err);
+                //res.statusCode = 400;
+                next();
             } else
                 next(err);
         })
 }
 
+async function getLatestNewsWithPagination(req, res, next) {
+    // filter variables
+    let currentYear = new Date().getFullYear();
+    let ltYear = currentYear + 1;
+    let gtYear = currentYear - 1;
+    let ltDate = `${ltYear}-01-01`;
+    let gtDate = `${gtYear}-01-01`;
+    console.log(ltYear, gtYear, ltDate, gtDate);
+    //
+    let docsCount = await Model.countDocuments(
+        {
+            date: {
+                $gt: gtDate,
+                $lt: ltDate
+            }
+        }
+    );
 
+    if (docsCount) {
+        // pagenation variables;
+        try {
+            var limit = parseInt(req.params.perPage);
+            var skip = (req.params.page - 1) * limit;
+            var numberOfPages = Math.ceil(docsCount / limit);
+            var previousState = true;
+            var nextSate = false;
+        } catch (err) {
+            const error = new Error('per Page can\'t be zero');
+            next(error);
+        }
+        //
+        Model.find({ date: { $gt: gtDate, $lt: ltDate } }).
+            skip(skip).
+            limit(limit).
+            sort({ date: -1 }).
+            exec((err, data) => {
+                if (!err) {
+
+                    if (skip == 0)
+                        previousState = false;
+                    if (docsCount > limit * parseInt(req.params.page)) {
+                        nextSate = true;
+                        //console.log(nextSate);
+                    }
+
+
+                    const pagObject = new PaginationObject(
+                        docsCount,
+                        numberOfPages,
+                        previousState,
+                        nextSate
+                    );
+                    const resObj = new ResponseObject(
+                        req.user,
+                        {
+                            pagenation: pagObject,
+                            doc: data
+                        }
+                    )
+                    res.json(resObj);
+                } else {
+                    next(err);
+                }
+            });
+    } else {
+        // if no current year inputs go to the next middleware
+        // which will call all news and paginate.
+        next();
+    }
+}
 function create(req, res, next) {
     // three possible errors
     // validation
     // connection
     // unique fields
-    const instance = new Model(req.body);
+    let instance = new Model(req.body);
+    if (req.body.date) {
+        instance.date = new Date(req.body.date);
+        console.log(instance.date);
+    } else {
+        instance.date = new Date();
+        console.log(instance.date);
+    }
     instance.save().
         then(v => {
             const resObj = new ResponseObject(
@@ -94,6 +183,17 @@ function saver(req, res, next) {
     });
     instance.images = images;
     instance.files = files;
+
+    // becareful when dealing with dates
+    // it must be saved as dates.
+    if (req.body.date) {
+        instance.date = new Date(req.body.date);
+        //console.log(instance.date);
+    } else {
+        instance.date = new Date();
+        //console.log(instance.date);
+    }
+
     instance.save().
         then(v => {
             const resObj = new ResponseObject(
@@ -104,7 +204,7 @@ function saver(req, res, next) {
         }).
         catch(err => {
             // unique fields errors
-            console.log(err);
+            //console.log(err);
             if (err.name == 'MongoError'
                 && err.code
                 || err.name == 'ValidationError'
@@ -175,5 +275,6 @@ module.exports = {
     update: update,
     delete_: delete_,
     create: create,
-    saver: saver
+    saver: saver,
+    getLatestNews: getLatestNewsWithPagination
 }

@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const Model = require('../models/publication');
-const paginate = require('../controllers/pagination-controller');
+const Paginate = require('../controllers/pagination-controller');
+const paginate = Paginate.paginate;
+const paginateSortByDate = Paginate.paginateSortByDate;
 
 const pub = require('../controllers/publication-controller');
 const auth = require('../middlewares/auth-middleware');
@@ -21,7 +23,7 @@ router.get('', getAll);
 router.get('/:id',getById);
 
 // pagination
-router.get('/:perPage/:page',paginate(Model));
+router.get('/:perPage/:page',paginateSortByDate(Model));
 
 // create
 router.post('', hasPermission('create'), create);
